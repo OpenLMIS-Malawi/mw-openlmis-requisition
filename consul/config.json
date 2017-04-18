@@ -1,15 +1,15 @@
 {
   "service": {
-    "Name": "template",
+    "Name": "mw-requisition",
     "Port": 8080,
     "Tags": ["openlmis-service"]
   },
   "raml": "src/main/resources/api-definition.yaml",
   "path": [
-    "template",
-    "template/docs",
-    "template/docs/<all>",
-    "template/webjars",
-    "template/webjars/<all>"
+    "mw-requisition",
+    "mw-requisition/docs",
+    "mw-requisition/docs/<all>",
+    "mw-requisition/webjars",
+    "mw-requisition/webjars/<all>"
   ]
 }
