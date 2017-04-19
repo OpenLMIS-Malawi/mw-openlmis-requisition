@@ -13,33 +13,30 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.domain;
+package mw.gov.health.lmis.mwrequisition.web;
 
-import com.fasterxml.jackson.annotation.JsonView;
+import org.openlmis.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.openlmis.util.View;
+/**
+ * Controller used for displaying service's version information.
+ */
+@RestController
+public class VersionController {
 
-import java.util.UUID;
+  private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
-import lombok.Getter;
-import lombok.Setter;
-
-@MappedSuperclass
-public abstract class BaseEntity {
-  protected static final String UUID_COLUMN_DEFINITION = "pg-uuid";
-
-  @Id
-  @GeneratedValue(generator = "uuid-gen")
-  @GenericGenerator(name = "uuid-gen", strategy = "uuid2")
-  @JsonView(View.BasicInformation.class)
-  @Type(type = UUID_COLUMN_DEFINITION)
-  @Getter
-  @Setter
-  protected UUID id;
+  /**
+   * Displays version information.
+   *
+   * @return {Version} Returns version read from file.
+   */
+  @RequestMapping("/mw-requisition")
+  public Version display() {
+    LOGGER.debug("Returning version");
+    return new Version();
+  }
 }

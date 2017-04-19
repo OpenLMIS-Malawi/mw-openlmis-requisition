@@ -13,7 +13,7 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.web;
+package mw.gov.health.lmis.mwrequisition.web;
 
 import mw.gov.health.lmis.util.Pagination;
 import org.apache.commons.lang3.StringUtils;

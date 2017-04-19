@@ -17,7 +17,7 @@ package mw.gov.health.lmis.util;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.UUIDGenerator;
-import mw.gov.health.lmis.domain.BaseEntity;
+import mw.gov.health.lmis.mwrequisition.domain.BaseEntity;
 
 import java.io.Serializable;
 

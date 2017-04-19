@@ -13,7 +13,7 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.web;
+package mw.gov.health.lmis.mwrequisition.web;
 
 import mw.gov.health.lmis.i18n.ExposedMessageSource;
 import org.slf4j.Logger;

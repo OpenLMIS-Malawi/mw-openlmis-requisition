@@ -13,30 +13,33 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.web;
+package mw.gov.health.lmis.mwrequisition.domain;
 
-import org.openlmis.util.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.annotation.JsonView;
 
-/**
- * Controller used for displaying service's version information.
- */
-@RestController
-public class VersionController {
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.openlmis.util.View;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
+import java.util.UUID;
 
-  /**
-   * Displays version information.
-   *
-   * @return {Version} Returns version read from file.
-   */
-  @RequestMapping("/mw-requisition")
-  public Version display() {
-    LOGGER.debug("Returning version");
-    return new Version();
-  }
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@MappedSuperclass
+public abstract class BaseEntity {
+  protected static final String UUID_COLUMN_DEFINITION = "pg-uuid";
+
+  @Id
+  @GeneratedValue(generator = "uuid-gen")
+  @GenericGenerator(name = "uuid-gen", strategy = "uuid2")
+  @JsonView(View.BasicInformation.class)
+  @Type(type = UUID_COLUMN_DEFINITION)
+  @Getter
+  @Setter
+  protected UUID id;
 }

@@ -27,7 +27,7 @@ import org.javers.repository.sql.SqlRepositoryBuilder;
 import org.javers.spring.auditable.AuthorProvider;
 import org.javers.spring.boot.sql.JaversProperties;
 import org.javers.spring.jpa.TransactionalJaversBuilder;
-import mw.gov.health.lmis.domain.BaseEntity;
+import mw.gov.health.lmis.mwrequisition.domain.BaseEntity;
 import mw.gov.health.lmis.i18n.ExposedMessageSourceImpl;
 import mw.gov.health.lmis.security.UserNameProvider;
 import org.slf4j.Logger;
