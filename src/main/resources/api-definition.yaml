@@ -30,6 +30,92 @@ schemas:
           }
       }
 
+
+  - requisitionDto: |
+      {   "type": "object",
+          "$schema": "http://json-schema.org/draft-04/schema",
+          "title": "RequisitionDto",
+          "description": "A single requisitionDto",
+          "properties": {
+              "id": { "type": "string", "title": "id" },
+              "createdDate": {"type": "array", "title": "createdDate", "items": {"type": "integer" }, "uniqueItems": false },
+              "facility": { "type": "object", "$ref": "schemas/facilityDto.json", "title": "facility" },
+              "program": { "type": "object", "$ref": "schemas/programDto.json", "title": "program" },
+              "supplyingFacility" : {"type": ["string", "null"], "title": "supplyingFacility"},
+              "status": { "type": "string", "title": "status" },
+              "emergency": { "type": "boolean", "title": "emergency" },
+              "supervisoryNode": { "type": "string", "title": "supervisoryNode" },
+              "processingPeriod": { "type": "object", "$ref": "schemas/processingPeriodDto.json", "title": "processingPeriod" },
+              "draftStatusMessage": { "type": "string", "title": "draftStatusMessage" },
+              "requisitionLineItems": { "type": "array", "title": "requisitionLineItems", "items": { "type": "object", "$ref":"#/schemas/requisitionLineItemDto" }, "uniqueItems": false }
+          },
+          "required": ["id", "facility", "program", "processingPeriod", "status", "supervisoryNode"]
+      }
+
+
+  - requisitionLineItemDto: |
+      {   "type": "object",
+          "$schema": "http://json-schema.org/draft-04/schema",
+          "title": "RequisitionLineItemDto",
+          "description": "A single requisitionLineItemDto",
+          "properties": {
+              "id": { "type": "string", "required": true, "title": "id" },
+              "orderable": { "type": "object", "$ref": "#/schemas/orderableDto", "required": true, "title": "orderable" },
+              "beginningBalance": { "type": "integer", "required": false, "title": "beginningBalance" },
+              "totalReceivedQuantity": { "type": "integer", "required": false, "title": "totalReceivedQuantity" },
+              "totalLossesAndAdjustments": { "type": "integer", "required": false, "title": "totalLossesAndAdjustments" },
+              "stockOnHand": { "type": "integer", "required": false, "title": "stockOnHand" },
+              "requestedQuantity": { "type": "integer", "required": false, "title": "requestedQuantity" },
+              "totalConsumedQuantity": { "type": "integer", "required": false, "title": "totalConsumedQuantity" },
+              "requestedQuantityExplanation": { "type": "string", "required": false, "title": "requestedQuantityExplanation" },
+              "remarks": {"type": "string", "required": true, "title": "remarks" },
+              "approvedQuantity": {"type": "integer", "required": true, "title": "approvedQuantity" },
+              "total": {"type": "integer", "required": false, "title": "total" },
+              "pricePerPack": {"type": "number", "required": false, "title": "pricePerPack" },
+              "numberOfNewPatientsAdded": {"type": "number", "required": false, "title": "numberOfNewPatientsAdded" },
+              "skipped": {"type": "boolean", "required": false, "title": "skipped" },
+              "adjustedConsumption": {"type": "number", "required": false, "title": "adjustedConsumption" },
+              "averageConsumption": {"type": "number", "required": false, "title": "averageConsumption" }
+          }
+      }
+
+
+  - localizedMessage: !include schemas/localizedMessage.json
+
+  - uuidArray: |
+      {
+          "type": "array",
+          "items": { "type": "string", "title": "id" }
+      }
+
+  - requisitionError: |
+      {   "type": "object",
+          "$schema": "http://json-schema.org/draft-04/schema",
+          "title": "RequisitionError",
+          "description": "A single requisition error",
+          "properties": {
+              "error": { "type": "object", "$ref": "#/schemas/localizedMessage" },
+              "requisitionId": { "type": "string", "title": "id" }
+          }
+      }
+
+  - requisitionErrorArray: |
+      {
+          "type": "array",
+          "items": { "type": "object", "$ref": "#/schemas/requisitionError" }
+      }
+
+  - requisitionsProcessingStatus: |
+      {   "type": "object",
+          "$schema": "http://json-schema.org/draft-04/schema",
+          "title": "RequisitionsProcessingStatus",
+          "description": "An array of all requsitions that have been processed successfully and an array of errors.",
+          "properties": {
+              "requisitions": { "type": "object", "$ref": "#/schemas/requisitionDtoArray" },
+              "errors": { "type": "object", "$ref": "#/schemas/requisitionErrorArray" }
+          }
+      }
+
 traits:
     - paginated:
           queryParameters:
@@ -136,3 +222,38 @@ resourceTypes:
           responses:
       /{id}/auditLog:
         type: instanceAuditLog
+/api:
+  /requisitions:
+      displayName: Requisition
+      /approve:
+          post:
+              is: [ secured ]
+              body:
+                  application/json:
+                      schema: uuidArray
+              description: Attempts to approve requisitions with UUIDs provided in the request body. It always processes all the requisitions and returns an array of requisitions that have been approved successfully and an array of error messages.
+              responses:
+                  "200":
+                      body:
+                        application/json:
+                            schema: requisitionsProcessingStatus
+                  "400":
+                      body:
+                        application/json:
+                            schema: requisitionsProcessingStatus
+      /save:
+          put:
+              is: [ secured ]
+              body:
+                  application/json:
+                      schema: requisitionDtoArray
+              description: Saves requisitions with the UUIDs provided in the request body. It always processes all the requisitions and returns an array of requisitions that have been saved successfully and an array of error messages.
+              responses:
+                  "200":
+                      body:
+                        application/json:
+                            schema: requisitionsProcessingStatus
+                  "400":
+                      body:
+                        application/json:
+                            schema: requisitionsProcessingStatus
