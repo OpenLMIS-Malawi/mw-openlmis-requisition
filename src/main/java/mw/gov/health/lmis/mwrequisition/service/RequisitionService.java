@@ -52,7 +52,7 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     try {
-      restTemplate.postForEntity(createUri(url, parameters), null, Object.class);
+      restTemplate.postForEntity(createUri(url, parameters), null, String.class);
     } catch (RestClientException ex) {
       logger.error("Can not approve requisition ", ex);
       return false;
@@ -66,7 +66,7 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
    * @param requisitionDto the representation of the object to save
    */
   public boolean update(RequisitionDto requisitionDto) {
-    String url = getServiceUrl() + getUrl();
+    String url = getServiceUrl() + getUrl() + requisitionDto.getId();
 
     RequestParameters parameters = RequestParameters
         .init()

@@ -1,7 +1,6 @@
 package mw.gov.health.lmis.mwrequisition.dto;
 
 import lombok.Getter;
-import mw.gov.health.lmis.mwrequisition.errorhandling.Message;
 
 import java.util.UUID;
 
@@ -12,10 +11,10 @@ import java.util.UUID;
 public class RequisitionErrorMessage {
 
   private UUID requisitionId;
-  private Message errorMessage;
+  private LocalizedMessageDto errorMessage;
 
-  public RequisitionErrorMessage(UUID requisitionId, String key, Object... messageParameters) {
+  public RequisitionErrorMessage(UUID requisitionId, String messageKey, String message) {
     this.requisitionId = requisitionId;
-    this.errorMessage = new Message(key, messageParameters);
+    this.errorMessage = new LocalizedMessageDto(messageKey, message);
   }
 }
