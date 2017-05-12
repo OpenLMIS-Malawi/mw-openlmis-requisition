@@ -117,6 +117,14 @@ schemas:
       }
 
 traits:
+    - secured:
+          queryParameters:
+              access_token:
+                  displayName: access_token
+                  description: OAuth2 access token
+                  type: string
+                  required: true
+                  repeat: false
     - paginated:
           queryParameters:
               page:
