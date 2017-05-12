@@ -42,13 +42,13 @@ public class AuthService {
     return accessToken;
   }
 
-  private HttpServletRequest getCurrentHttpRequest(){
+  private HttpServletRequest getCurrentHttpRequest() {
     RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
     if (requestAttributes instanceof ServletRequestAttributes) {
-      HttpServletRequest request = ((ServletRequestAttributes)requestAttributes).getRequest();
+      HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
       return request;
     }
     return null;
   }
-  
+
 }

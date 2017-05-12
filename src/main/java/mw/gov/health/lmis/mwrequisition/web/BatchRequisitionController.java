@@ -28,7 +28,7 @@ public class BatchRequisitionController extends BaseController {
   @RequestMapping(value = "/requisitions/approve", method = RequestMethod.POST)
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
-  public RequisitionsProcessingStatusDto approveRequisitions(@RequestBody List<UUID> uuids) {
+  public RequisitionsProcessingStatusDto approve(@RequestBody List<UUID> uuids) {
     for (UUID requisitionId : uuids) {
       requisitionService.approve(requisitionId);
     }
@@ -42,7 +42,7 @@ public class BatchRequisitionController extends BaseController {
   @RequestMapping(value = "/requisitions/save", method = RequestMethod.PUT)
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
-  public RequisitionsProcessingStatusDto updateRequisitions(@RequestBody List<RequisitionDto> dtos) {
+  public RequisitionsProcessingStatusDto update(@RequestBody List<RequisitionDto> dtos) {
     for (RequisitionDto dto : dtos) {
       requisitionService.update(dto);
     }

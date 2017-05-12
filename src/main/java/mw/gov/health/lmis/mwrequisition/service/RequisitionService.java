@@ -41,11 +41,11 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
   /**
    * Sends a request to the openlmis-requisition service to approve the requisition of the given
    * UUID.
+   *
    * @param uuid the UUID of the requisition to approve
-   * @return
    */
   public boolean approve(UUID uuid) {
-    String url = getServiceUrl() + getUrl() + uuid.toString() + APPROVE_ENDPOINT ;
+    String url = getServiceUrl() + getUrl() + uuid.toString() + APPROVE_ENDPOINT;
 
     RequestParameters parameters = RequestParameters
         .init()
@@ -62,8 +62,8 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
 
   /**
    * Sends a request to the openlmis-requisition service to save the requisition.
+   *
    * @param requisitionDto the representation of the object to save
-   * @return
    */
   public boolean update(RequisitionDto requisitionDto) {
     String url = getServiceUrl() + getUrl();
