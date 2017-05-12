@@ -5,12 +5,16 @@ import static mw.gov.health.lmis.util.RequestHelper.createUri;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 
 import java.util.UUID;
 
+@Service
 public class RequisitionService extends BaseCommunicationService<RequisitionDto> {
 
   private static final String APPROVE_ENDPOINT = "/approve";
@@ -44,20 +48,14 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
    *
    * @param uuid the UUID of the requisition to approve
    */
-  public boolean approve(UUID uuid) {
+  public ResponseEntity<RequisitionDto> approve(UUID uuid) {
     String url = getServiceUrl() + getUrl() + uuid.toString() + APPROVE_ENDPOINT;
 
     RequestParameters parameters = RequestParameters
         .init()
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
-    try {
-      restTemplate.postForEntity(createUri(url, parameters), null, String.class);
-    } catch (RestClientException ex) {
-      logger.error("Can not approve requisition ", ex);
-      return false;
-    }
-    return true;
+    return restTemplate.postForEntity(createUri(url, parameters), null, RequisitionDto.class);
   }
 
   /**
@@ -65,7 +63,8 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
    *
    * @param requisitionDto the representation of the object to save
    */
-  public boolean update(RequisitionDto requisitionDto) {
+  public ResponseEntity<RequisitionDto> update(RequisitionDto requisitionDto)
+      throws RestClientException {
     String url = getServiceUrl() + getUrl() + requisitionDto.getId();
 
     RequestParameters parameters = RequestParameters
@@ -74,12 +73,7 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
 
     HttpEntity<RequisitionDto> body = new HttpEntity<>(requisitionDto);
 
-    try {
-      restTemplate.put(createUri(url, parameters), body);
-    } catch (RestClientException ex) {
-      logger.error("Can not save requisition ", ex);
-      return false;
-    }
-    return true;
+    return restTemplate.exchange(createUri(url, parameters), HttpMethod.PUT, body,
+        RequisitionDto.class);
   }
 }

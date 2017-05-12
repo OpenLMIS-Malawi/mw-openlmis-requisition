@@ -15,65 +15,13 @@
 
 package mw.gov.health.lmis.mwrequisition.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
-public class RequisitionDto {
-  @Getter
-  @Setter
+@Data
+public class FacilityOperatorDto {
   private UUID id;
-
-  @Getter
-  @Setter
-  private ZonedDateTime createdDate;
-
-  @Getter
-  @Setter
-  private ZonedDateTime modifiedDate;
-
-  @Setter
-  @Getter
-  private List<RequisitionLineItemDto> requisitionLineItems;
-
-  @Getter
-  @Setter
-  private String draftStatusMessage;
-
-  @Getter
-  @Setter
-  private FacilityDto facility;
-
-  @Getter
-  @Setter
-  private ProgramDto program;
-
-
-  @Getter
-  @Setter
-  private ProcessingPeriodDto processingPeriod;
-
-  @Getter
-  @Setter
-  private RequisitionStatus status;
-
-  @Getter
-  @Setter
-  private Boolean emergency;
-
-  @Getter
-  @Setter
-  private UUID supplyingFacility;
-
-  @Getter
-  @Setter
-  private UUID supervisoryNode;
-
+  private String code;
+  private String name;
 }
