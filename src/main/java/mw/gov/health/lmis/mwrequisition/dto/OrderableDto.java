@@ -21,19 +21,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderableDto {
-  private UUID id;
-  private String productCode;
-  private String fullProductName;
-  private long netContent;
-  private long packRoundingThreshold;
-  private boolean roundToZero;
+public class OrderableDto extends BasicOrderableDto {
   private Set<ProgramOrderableDto> programs;
   private DispensableDto dispensable;
 }

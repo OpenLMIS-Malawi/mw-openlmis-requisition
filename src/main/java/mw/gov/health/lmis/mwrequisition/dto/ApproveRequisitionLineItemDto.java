@@ -33,7 +33,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ApproveRequisitionLineItemDto {
   private UUID id;
-  private OrderableDto orderable;
+
+  @JsonSerialize(as = BasicOrderableDto.class)
+  private BasicOrderableDto orderable;
+
   private Integer approvedQuantity;
 
   @JsonSerialize(using = MoneySerializer.class)

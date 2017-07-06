@@ -15,42 +15,17 @@
 
 package mw.gov.health.lmis.mwrequisition.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@AllArgsConstructor
-public class ApproveRequisitionDto {
+public class BasicProcessingPeriodDto {
   private UUID id;
-
-  @JsonSerialize(as = BasicProcessingPeriodDto.class)
-  private BasicProcessingPeriodDto processingPeriod;
-
-  @JsonSerialize(as = BasicFacilityDto.class)
-  private BasicFacilityDto facility;
-
-  private List<ApproveRequisitionLineItemDto> requisitionLineItems;
-
-  /**
-   * Creates instance with data from original requisition.
-   */
-  public ApproveRequisitionDto(RequisitionDto requisition) {
-    this.id = requisition.getId();
-    this.facility = requisition.getFacility();
-    this.processingPeriod = requisition.getProcessingPeriod();
-    this.requisitionLineItems = requisition
-        .getRequisitionLineItems()
-        .stream()
-        .map(ApproveRequisitionLineItemDto::new)
-        .collect(Collectors.toList());
-  }
-
+  private String name;
+  private LocalDate startDate;
+  private LocalDate endDate;
 }
