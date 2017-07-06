@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 public class RequisitionsProcessingStatusDto {
 
-  private List<RequisitionDto> requisitionDtos;
+  private List<ApproveRequisitionDto> requisitionDtos;
   private List<RequisitionErrorMessage> requisitionErrors;
 
   public RequisitionsProcessingStatusDto() {
@@ -19,7 +19,7 @@ public class RequisitionsProcessingStatusDto {
     this.requisitionErrors = new ArrayList<>();
   }
 
-  public void addProcessedRequisition(RequisitionDto requisitionDto) {
+  public void addProcessedRequisition(ApproveRequisitionDto requisitionDto) {
     requisitionDtos.add(requisitionDto);
   }
 

@@ -17,28 +17,33 @@ package mw.gov.health.lmis.mwrequisition.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
-public class RequisitionDto {
+public class ApproveRequisitionDto {
   private UUID id;
-  private ZonedDateTime createdDate;
-  private ZonedDateTime modifiedDate;
-  private List<RequisitionLineItemDto> requisitionLineItems;
-  private String draftStatusMessage;
   private FacilityDto facility;
-  private ProgramDto program;
   private ProcessingPeriodDto processingPeriod;
-  private RequisitionStatus status;
-  private Boolean emergency;
-  private UUID supplyingFacility;
-  private UUID supervisoryNode;
+  private List<ApproveRequisitionLineItemDto> requisitionLineItems;
+
+  /**
+   * Creates instance with data from original requisition.
+   */
+  public ApproveRequisitionDto(RequisitionDto requisition) {
+    this.id = requisition.getId();
+    this.facility = requisition.getFacility();
+    this.processingPeriod = requisition.getProcessingPeriod();
+    this.requisitionLineItems = requisition
+        .getRequisitionLineItems()
+        .stream()
+        .map(ApproveRequisitionLineItemDto::new)
+        .collect(Collectors.toList());
+  }
+
 }

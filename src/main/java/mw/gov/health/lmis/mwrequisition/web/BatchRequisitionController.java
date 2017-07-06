@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.RestClientResponseException;
 
+import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionDto;
+import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionLineItemDto;
 import mw.gov.health.lmis.mwrequisition.dto.LocalizedMessageDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionErrorMessage;
@@ -36,9 +38,27 @@ public class BatchRequisitionController extends BaseController {
   private ObjectMapper objectMapper = new ObjectMapper();
 
   /**
+   * Attempts to retrieve requisitions with the provided UUIDs.
+   */
+  @RequestMapping(value = "/requisitions/batch", method = RequestMethod.POST)
+  @ResponseStatus(HttpStatus.OK)
+  @ResponseBody
+  public RequisitionsProcessingStatusDto retrieve(@RequestBody List<UUID> uuids) {
+    RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
+
+    uuids
+        .stream()
+        .map(requisitionService::findOne)
+        .map(ApproveRequisitionDto::new)
+        .forEach(processingStatus::addProcessedRequisition);
+
+    return processingStatus;
+  }
+
+  /**
    * Attempts to approve requisitions with the provided UUIDs.
    */
-  @RequestMapping(value = "/requisitions/approve", method = RequestMethod.POST)
+  @RequestMapping(value = "/requisitions/batch/approve", method = RequestMethod.POST)
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
   public ResponseEntity<RequisitionsProcessingStatusDto> approve(@RequestBody List<UUID> uuids) {
@@ -47,7 +67,7 @@ public class BatchRequisitionController extends BaseController {
     for (UUID requisitionId : uuids) {
       try {
         RequisitionDto requisitionDto = requisitionService.approve(requisitionId).getBody();
-        processingStatus.addProcessedRequisition(requisitionDto);
+        processingStatus.addProcessedRequisition(new ApproveRequisitionDto(requisitionDto));
       } catch (RestClientResponseException ex) {
         LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
         processingStatus.addProcessingError(new RequisitionErrorMessage(requisitionId,
@@ -62,17 +82,31 @@ public class BatchRequisitionController extends BaseController {
   /**
    * Attempts to approve requisitions with the provided UUIDs.
    */
-  @RequestMapping(value = "/requisitions/save", method = RequestMethod.PUT)
+  @RequestMapping(value = "/requisitions/batch/save", method = RequestMethod.PUT)
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
-  public ResponseEntity<RequisitionsProcessingStatusDto> update(@RequestBody List<RequisitionDto>
-                                                                     dtos) {
+  public ResponseEntity<RequisitionsProcessingStatusDto> update(
+      @RequestBody List<ApproveRequisitionDto> dtos) {
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
 
-    for (RequisitionDto dto : dtos) {
+    for (ApproveRequisitionDto dto : dtos) {
       try {
-        RequisitionDto requisitionDto = requisitionService.update(dto).getBody();
-        processingStatus.addProcessedRequisition(requisitionDto);
+        RequisitionDto requisitionDto = requisitionService.findOne(dto.getId());
+
+        for (ApproveRequisitionLineItemDto line : dto.getRequisitionLineItems()) {
+          requisitionDto
+              .getRequisitionLineItems()
+              .stream()
+              .filter(original -> original.getId().equals(line.getId()))
+              .findFirst()
+              .ifPresent(original -> {
+                original.setApprovedQuantity(line.getApprovedQuantity());
+                original.setTotalCost(line.getTotalCost());
+              });
+        }
+
+        requisitionDto = requisitionService.update(requisitionDto).getBody();
+        processingStatus.addProcessedRequisition(new ApproveRequisitionDto(requisitionDto));
       } catch (RestClientResponseException ex) {
         LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
         processingStatus.addProcessingError(new RequisitionErrorMessage(dto.getId(), messageDto
