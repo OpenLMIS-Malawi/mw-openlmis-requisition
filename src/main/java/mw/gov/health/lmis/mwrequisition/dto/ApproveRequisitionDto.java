@@ -15,6 +15,8 @@
 
 package mw.gov.health.lmis.mwrequisition.dto;
 
+import com.google.common.collect.Lists;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import lombok.AllArgsConstructor;
@@ -51,6 +53,16 @@ public class ApproveRequisitionDto {
         .stream()
         .map(ApproveRequisitionLineItemDto::new)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Creates instance with data from original basic requisition.
+   */
+  public ApproveRequisitionDto(BasicRequisitionDto requisition) {
+    this.id = requisition.getId();
+    this.facility = requisition.getFacility();
+    this.processingPeriod = requisition.getProcessingPeriod();
+    this.requisitionLineItems = Lists.newArrayList();
   }
 
 }

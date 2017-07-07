@@ -17,6 +17,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionLineItemDto;
+import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.LocalizedMessageDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionErrorMessage;
@@ -66,7 +67,7 @@ public class BatchRequisitionController extends BaseController {
 
     for (UUID requisitionId : uuids) {
       try {
-        RequisitionDto requisitionDto = requisitionService.approve(requisitionId).getBody();
+        BasicRequisitionDto requisitionDto = requisitionService.approve(requisitionId).getBody();
         processingStatus.addProcessedRequisition(new ApproveRequisitionDto(requisitionDto));
       } catch (RestClientResponseException ex) {
         LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
+import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 
 import java.util.UUID;
@@ -48,14 +49,14 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
    *
    * @param uuid the UUID of the requisition to approve
    */
-  public ResponseEntity<RequisitionDto> approve(UUID uuid) {
+  public ResponseEntity<BasicRequisitionDto> approve(UUID uuid) {
     String url = getServiceUrl() + getUrl() + uuid.toString() + APPROVE_ENDPOINT;
 
     RequestParameters parameters = RequestParameters
         .init()
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
-    return restTemplate.postForEntity(createUri(url, parameters), null, RequisitionDto.class);
+    return restTemplate.postForEntity(createUri(url, parameters), null, BasicRequisitionDto.class);
   }
 
   /**
