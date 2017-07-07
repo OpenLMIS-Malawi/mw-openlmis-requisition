@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -26,7 +27,12 @@ import mw.gov.health.lmis.mwrequisition.service.RequisitionService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Controller
 public class BatchRequisitionController extends BaseController {
@@ -35,6 +41,9 @@ public class BatchRequisitionController extends BaseController {
 
   @Autowired
   private RequisitionService requisitionService;
+
+  @Value("${batchApprove.retrieveAsync.poolSize}")
+  private Integer poolSize = 5;
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -45,11 +54,11 @@ public class BatchRequisitionController extends BaseController {
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
   public RequisitionsProcessingStatusDto retrieve(@RequestBody List<UUID> uuids) {
-    RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
+    List<RequisitionDto> requisitions = retrieveAsync(uuids);
 
-    uuids
+    RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
+    requisitions
         .stream()
-        .map(requisitionService::findOne)
         .map(ApproveRequisitionDto::new)
         .forEach(processingStatus::addProcessedRequisition);
 
@@ -88,35 +97,58 @@ public class BatchRequisitionController extends BaseController {
   @ResponseBody
   public ResponseEntity<RequisitionsProcessingStatusDto> update(
       @RequestBody List<ApproveRequisitionDto> dtos) {
+
+    List<UUID> uuids = dtos.stream().map(ApproveRequisitionDto::getId).collect(Collectors.toList());
+    List<RequisitionDto> requisitions = retrieveAsync(uuids);
+
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
 
     for (ApproveRequisitionDto dto : dtos) {
-      try {
-        RequisitionDto requisitionDto = requisitionService.findOne(dto.getId());
-
-        for (ApproveRequisitionLineItemDto line : dto.getRequisitionLineItems()) {
-          requisitionDto
-              .getRequisitionLineItems()
-              .stream()
-              .filter(original -> original.getId().equals(line.getId()))
-              .findFirst()
-              .ifPresent(original -> {
-                original.setApprovedQuantity(line.getApprovedQuantity());
-                original.setTotalCost(line.getTotalCost());
-              });
-        }
-
-        requisitionDto = requisitionService.update(requisitionDto).getBody();
-        processingStatus.addProcessedRequisition(new ApproveRequisitionDto(requisitionDto));
-      } catch (RestClientResponseException ex) {
-        LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
-        processingStatus.addProcessingError(new RequisitionErrorMessage(dto.getId(), messageDto
-            .getMessageKey(), messageDto.getMessage()));
-      }
+      requisitions
+          .stream()
+          .filter(requisition -> Objects.equals(requisition.getId(), dto.getId()))
+          .findFirst()
+          .ifPresent(requisition -> updateOne(processingStatus, dto, requisition));
     }
 
     return new ResponseEntity<>(processingStatus, processingStatus.getRequisitionErrors().isEmpty()
         ? HttpStatus.OK : HttpStatus.BAD_REQUEST);
+  }
+
+  private void updateOne(RequisitionsProcessingStatusDto processingStatus,
+                         ApproveRequisitionDto dto, RequisitionDto requisition) {
+    for (ApproveRequisitionLineItemDto line : dto.getRequisitionLineItems()) {
+      requisition
+          .getRequisitionLineItems()
+          .stream()
+          .filter(original -> Objects.equals(original.getId(), line.getId()))
+          .findFirst()
+          .ifPresent(original -> {
+            original.setApprovedQuantity(line.getApprovedQuantity());
+            original.setTotalCost(line.getTotalCost());
+          });
+    }
+
+    try {
+      RequisitionDto response = requisitionService.update(requisition).getBody();
+      processingStatus.addProcessedRequisition(new ApproveRequisitionDto(response));
+    } catch (RestClientResponseException ex) {
+      LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
+      processingStatus.addProcessingError(new RequisitionErrorMessage(dto.getId(), messageDto
+          .getMessageKey(), messageDto.getMessage()));
+    }
+  }
+
+  private List<RequisitionDto> retrieveAsync(List<UUID> uuids) {
+    ExecutorService executor = Executors.newFixedThreadPool(Math.min(uuids.size(), poolSize));
+
+    List<CompletableFuture<RequisitionDto>> futures = uuids.stream()
+        .map(id -> CompletableFuture.supplyAsync(() -> requisitionService.findOne(id), executor))
+        .collect(Collectors.toList());
+
+    return futures.stream()
+        .map(CompletableFuture::join)
+        .collect(Collectors.toList());
   }
 
   private LocalizedMessageDto parseErrorResponse(String response) {
