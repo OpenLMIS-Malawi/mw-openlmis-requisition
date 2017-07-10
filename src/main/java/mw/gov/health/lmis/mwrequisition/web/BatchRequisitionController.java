@@ -61,7 +61,6 @@ public class BatchRequisitionController extends BaseController {
   @ResponseBody
   public RequisitionsProcessingStatusDto retrieve(@RequestBody List<UUID> uuids) {
     List<RequisitionDto> requisitions = retrieveAsync(uuids);
-    removeSkippedProducts(requisitions);
 
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
     requisitions
@@ -194,9 +193,13 @@ public class BatchRequisitionController extends BaseController {
         .map(id -> CompletableFuture.supplyAsync(() -> requisitionService.findOne(id), executor))
         .collect(Collectors.toList());
 
-    return futures.stream()
+    List<RequisitionDto> requisitions = futures.stream()
         .map(CompletableFuture::join)
         .collect(Collectors.toList());
+
+    removeSkippedProducts(requisitions);
+
+    return requisitions;
   }
 
   private LocalizedMessageDto parseErrorResponse(String response) {
