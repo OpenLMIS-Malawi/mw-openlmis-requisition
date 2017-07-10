@@ -17,37 +17,26 @@ package mw.gov.health.lmis.mwrequisition.dto;
 
 import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @AllArgsConstructor
-public class ApproveRequisitionDto {
-  private UUID id;
-
-  @JsonSerialize(as = BasicProcessingPeriodDto.class)
-  private BasicProcessingPeriodDto processingPeriod;
-
-  @JsonSerialize(as = BasicFacilityDto.class)
-  private BasicFacilityDto facility;
-
+public class ApproveRequisitionDto extends BasicRequisitionDto {
   private List<ApproveRequisitionLineItemDto> requisitionLineItems;
 
   /**
    * Creates instance with data from original requisition.
    */
   public ApproveRequisitionDto(RequisitionDto requisition) {
-    this.id = requisition.getId();
-    this.facility = requisition.getFacility();
-    this.processingPeriod = requisition.getProcessingPeriod();
+    super(requisition.getId(), requisition.getEmergency(),requisition.getStatus(),requisition
+        .getModifiedDate(),requisition.getStatusChanges(),requisition.getProcessingPeriod(),
+        requisition.getFacility(),requisition.getProgram());
     this.requisitionLineItems = requisition
         .getRequisitionLineItems()
         .stream()
@@ -59,9 +48,9 @@ public class ApproveRequisitionDto {
    * Creates instance with data from original basic requisition.
    */
   public ApproveRequisitionDto(BasicRequisitionDto requisition) {
-    this.id = requisition.getId();
-    this.facility = requisition.getFacility();
-    this.processingPeriod = requisition.getProcessingPeriod();
+    super(requisition.getId(), requisition.getEmergency(),requisition.getStatus(),requisition
+            .getModifiedDate(),requisition.getStatusChanges(),requisition.getProcessingPeriod(),
+        requisition.getFacility(),requisition.getProgram());
     this.requisitionLineItems = Lists.newArrayList();
   }
 
