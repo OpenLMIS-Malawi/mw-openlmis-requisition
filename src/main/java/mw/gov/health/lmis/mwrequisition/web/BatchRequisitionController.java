@@ -2,6 +2,7 @@ package mw.gov.health.lmis.mwrequisition.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +21,19 @@ import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionLineItemDto;
 import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.LocalizedMessageDto;
+import mw.gov.health.lmis.mwrequisition.dto.OrderableDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionErrorMessage;
+import mw.gov.health.lmis.mwrequisition.dto.RequisitionLineItemDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionsProcessingStatusDto;
 import mw.gov.health.lmis.mwrequisition.service.RequisitionService;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -55,6 +61,7 @@ public class BatchRequisitionController extends BaseController {
   @ResponseBody
   public RequisitionsProcessingStatusDto retrieve(@RequestBody List<UUID> uuids) {
     List<RequisitionDto> requisitions = retrieveAsync(uuids);
+    removeSkippedProducts(requisitions);
 
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
     requisitions
@@ -113,6 +120,47 @@ public class BatchRequisitionController extends BaseController {
 
     return new ResponseEntity<>(processingStatus, processingStatus.getRequisitionErrors().isEmpty()
         ? HttpStatus.OK : HttpStatus.BAD_REQUEST);
+  }
+
+  private void removeSkippedProducts(List<RequisitionDto> requisitions) {
+    // all requisition line items
+    List<RequisitionLineItemDto> requisitionLineItems = requisitions
+        .stream()
+        .map(RequisitionDto::getRequisitionLineItems)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toList());
+
+    // all products. This list contains products that would be removed because all selected
+    // requisitions skipped those products.
+    Set<UUID> products = requisitionLineItems
+        .stream()
+        .map(RequisitionLineItemDto::getOrderable)
+        .map(OrderableDto::getId)
+        .collect(Collectors.toSet());
+
+    // if the given product is not skipped in any requisition, it will not be removed
+    // because it will not be present on the list.
+    requisitionLineItems
+        .stream()
+        .filter(line -> BooleanUtils.isFalse(line.getSkipped()))
+        .map(RequisitionLineItemDto::getOrderable)
+        .map(OrderableDto::getId)
+        .forEach(products::remove);
+
+    // find those requisition line items that contain skipped (in all requisitions) product
+    // and remove it.
+    for (RequisitionDto requisition : requisitions) {
+      Iterator<RequisitionLineItemDto> iterator = requisition.getRequisitionLineItems().iterator();
+      while (iterator.hasNext()) {
+        RequisitionLineItemDto line = iterator.next();
+        OrderableDto orderable = line.getOrderable();
+        UUID id = orderable.getId();
+
+        if (products.contains(id)) {
+          iterator.remove();
+        }
+      }
+    }
   }
 
   private void updateOne(RequisitionsProcessingStatusDto processingStatus,
