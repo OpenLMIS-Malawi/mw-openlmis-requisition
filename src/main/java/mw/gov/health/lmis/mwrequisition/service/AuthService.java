@@ -5,74 +5,50 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 package mw.gov.health.lmis.mwrequisition.service;
 
-import static mw.gov.health.lmis.util.RequestHelper.createUri;
 
-import org.apache.commons.codec.binary.Base64;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestOperations;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class AuthService {
   public static final String ACCESS_TOKEN = "access_token";
 
-  @Value("${auth.server.clientId}")
-  private String clientId;
-
-  @Value("${auth.server.clientSecret}")
-  private String clientSecret;
-
-  @Value("${auth.server.authorizationUrl}")
-  private String authorizationUrl;
-
-  private RestOperations restTemplate = new RestTemplate();
-
   /**
-   * Retrieves access token from the auth service.
+   * Retrieves access token from the current HTTP context.
    *
    * @return token.
    */
   public String obtainAccessToken() {
-    String plainCreds = clientId + ":" + clientSecret;
-    byte[] plainCredsBytes = plainCreds.getBytes();
-    byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
-    String base64Creds = new String(base64CredsBytes);
+    HttpServletRequest request = getCurrentHttpRequest();
+    if (request == null) {
+      return null;
+    }
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Authorization", "Basic " + base64Creds);
-
-    HttpEntity<String> request = new HttpEntity<>(headers);
-
-    RequestParameters params = RequestParameters
-        .init()
-        .set("grant_type", "client_credentials");
-
-    ResponseEntity<?> response = restTemplate.exchange(
-        createUri(authorizationUrl, params), HttpMethod.POST, request, Object.class
-    );
-
-    return ((Map<String, String>) response.getBody()).get(ACCESS_TOKEN);
+    String accessToken = request.getParameter(ACCESS_TOKEN);
+    return accessToken;
   }
 
-  void setRestTemplate(RestOperations restTemplate) {
-    this.restTemplate = restTemplate;
+  private HttpServletRequest getCurrentHttpRequest() {
+    RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+    if (requestAttributes instanceof ServletRequestAttributes) {
+      HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+      return request;
+    }
+    return null;
   }
 
 }
