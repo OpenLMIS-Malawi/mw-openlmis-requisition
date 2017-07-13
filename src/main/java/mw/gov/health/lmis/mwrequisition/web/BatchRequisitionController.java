@@ -23,6 +23,7 @@ import mw.gov.health.lmis.mwrequisition.dto.LocalizedMessageDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionErrorMessage;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionsProcessingStatusDto;
+import mw.gov.health.lmis.mwrequisition.service.AuthService;
 import mw.gov.health.lmis.mwrequisition.service.RequisitionService;
 
 import java.io.IOException;
@@ -42,6 +43,9 @@ public class BatchRequisitionController extends BaseController {
   @Autowired
   private RequisitionService requisitionService;
 
+  @Autowired
+  private AuthService authService;
+
   @Value("${batchApprove.retrieveAsync.poolSize}")
   private Integer poolSize = 5;
 
@@ -54,7 +58,8 @@ public class BatchRequisitionController extends BaseController {
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
   public RequisitionsProcessingStatusDto retrieve(@RequestBody List<UUID> uuids) {
-    List<RequisitionDto> requisitions = retrieveAsync(uuids);
+    String accessToken = authService.obtainAccessToken();
+    List<RequisitionDto> requisitions = retrieveAsync(uuids, accessToken);
 
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
     requisitions
@@ -75,10 +80,13 @@ public class BatchRequisitionController extends BaseController {
   @ResponseBody
   public ResponseEntity<RequisitionsProcessingStatusDto> approve(@RequestBody List<UUID> uuids) {
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
+    String accessToken = authService.obtainAccessToken();
 
     for (UUID requisitionId : uuids) {
       try {
-        BasicRequisitionDto requisitionDto = requisitionService.approve(requisitionId).getBody();
+        BasicRequisitionDto requisitionDto = requisitionService
+            .approve(requisitionId, accessToken);
+
         processingStatus.addProcessedRequisition(new ApproveRequisitionDto(requisitionDto));
       } catch (RestClientResponseException ex) {
         LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
@@ -101,7 +109,9 @@ public class BatchRequisitionController extends BaseController {
       @RequestBody List<ApproveRequisitionDto> dtos) {
 
     List<UUID> uuids = dtos.stream().map(ApproveRequisitionDto::getId).collect(Collectors.toList());
-    List<RequisitionDto> requisitions = retrieveAsync(uuids);
+    String accessToken = authService.obtainAccessToken();
+
+    List<RequisitionDto> requisitions = retrieveAsync(uuids, accessToken);
 
     RequisitionsProcessingStatusDto processingStatus = new RequisitionsProcessingStatusDto();
 
@@ -110,7 +120,7 @@ public class BatchRequisitionController extends BaseController {
           .stream()
           .filter(requisition -> Objects.equals(requisition.getId(), dto.getId()))
           .findFirst()
-          .ifPresent(requisition -> updateOne(processingStatus, dto, requisition));
+          .ifPresent(requisition -> updateOne(processingStatus, dto, requisition, accessToken));
     }
 
     processingStatus.removeSkippedProducts();
@@ -120,7 +130,8 @@ public class BatchRequisitionController extends BaseController {
   }
 
   private void updateOne(RequisitionsProcessingStatusDto processingStatus,
-                         ApproveRequisitionDto dto, RequisitionDto requisition) {
+                         ApproveRequisitionDto dto, RequisitionDto requisition,
+                         String token) {
     for (ApproveRequisitionLineItemDto line : dto.getRequisitionLineItems()) {
       requisition
           .getRequisitionLineItems()
@@ -134,7 +145,7 @@ public class BatchRequisitionController extends BaseController {
     }
 
     try {
-      RequisitionDto response = requisitionService.update(requisition).getBody();
+      RequisitionDto response = requisitionService.update(requisition, token);
       processingStatus.addProcessedRequisition(new ApproveRequisitionDto(response));
     } catch (RestClientResponseException ex) {
       LocalizedMessageDto messageDto = parseErrorResponse(ex.getResponseBodyAsString());
@@ -143,11 +154,12 @@ public class BatchRequisitionController extends BaseController {
     }
   }
 
-  private List<RequisitionDto> retrieveAsync(List<UUID> uuids) {
+  private List<RequisitionDto> retrieveAsync(List<UUID> uuids, String token) {
     ExecutorService executor = Executors.newFixedThreadPool(Math.min(uuids.size(), poolSize));
 
     List<CompletableFuture<RequisitionDto>> futures = uuids.stream()
-        .map(id -> CompletableFuture.supplyAsync(() -> requisitionService.findOne(id), executor))
+        .map(id ->
+            CompletableFuture.supplyAsync(() -> requisitionService.retrieve(id, token), executor))
         .collect(Collectors.toList());
 
     return futures.stream()

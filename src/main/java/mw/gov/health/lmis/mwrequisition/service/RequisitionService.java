@@ -6,9 +6,10 @@ import static mw.gov.health.lmis.util.RequestHelper.createUri;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
 import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
@@ -16,31 +17,31 @@ import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import java.util.UUID;
 
 @Service
-public class RequisitionService extends BaseCommunicationService<RequisitionDto> {
-
+public class RequisitionService {
+  private static final String URL = "/api/requisitions/";
   private static final String APPROVE_ENDPOINT = "/approve";
+
+  private RestOperations restTemplate = new RestTemplate();
 
   @Value("${requisition.url}")
   private String requisitionUrl;
 
-  @Override
-  protected String getServiceUrl() {
-    return requisitionUrl;
-  }
+  /**
+   * Sends a request to the openlmis-requisition service to retrieve the requisition of the given
+   * UUID.
+   *
+   * @param uuid the UUID of the requisition to retrieve
+   */
+  public RequisitionDto retrieve(UUID uuid, String token) {
+    String url = requisitionUrl + URL + uuid.toString();
 
-  @Override
-  protected String getUrl() {
-    return "/api/requisitions/";
-  }
+    RequestParameters parameters = RequestParameters
+        .init()
+        .set(ACCESS_TOKEN, token);
 
-  @Override
-  protected Class<RequisitionDto> getResultClass() {
-    return RequisitionDto.class;
-  }
-
-  @Override
-  protected Class<RequisitionDto[]> getArrayResultClass() {
-    return RequisitionDto[].class;
+    return restTemplate
+        .getForEntity(createUri(url, parameters), RequisitionDto.class)
+        .getBody();
   }
 
   /**
@@ -49,32 +50,36 @@ public class RequisitionService extends BaseCommunicationService<RequisitionDto>
    *
    * @param uuid the UUID of the requisition to approve
    */
-  public ResponseEntity<BasicRequisitionDto> approve(UUID uuid) {
-    String url = getServiceUrl() + getUrl() + uuid.toString() + APPROVE_ENDPOINT;
+  public BasicRequisitionDto approve(UUID uuid, String token) {
+    String url = requisitionUrl + URL + uuid.toString() + APPROVE_ENDPOINT;
 
     RequestParameters parameters = RequestParameters
         .init()
-        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+        .set(ACCESS_TOKEN, token);
 
-    return restTemplate.postForEntity(createUri(url, parameters), null, BasicRequisitionDto.class);
+    return restTemplate
+        .postForEntity(createUri(url, parameters), null, BasicRequisitionDto.class)
+        .getBody();
   }
 
   /**
    * Sends a request to the openlmis-requisition service to save the requisition.
    *
-   * @param requisitionDto the representation of the object to save
+   * @param requisition the representation of the object to save
    */
-  public ResponseEntity<RequisitionDto> update(RequisitionDto requisitionDto)
+  public RequisitionDto update(RequisitionDto requisition, String token)
       throws RestClientException {
-    String url = getServiceUrl() + getUrl() + requisitionDto.getId();
+    String url = requisitionUrl + URL + requisition.getId();
 
     RequestParameters parameters = RequestParameters
         .init()
-        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+        .set(ACCESS_TOKEN, token);
 
-    HttpEntity<RequisitionDto> body = new HttpEntity<>(requisitionDto);
+    HttpEntity<RequisitionDto> body = new HttpEntity<>(requisition);
 
-    return restTemplate.exchange(createUri(url, parameters), HttpMethod.PUT, body,
-        RequisitionDto.class);
+    return restTemplate
+        .exchange(createUri(url, parameters), HttpMethod.PUT, body, RequisitionDto.class)
+        .getBody();
   }
+
 }
