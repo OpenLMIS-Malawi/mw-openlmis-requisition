@@ -22,6 +22,7 @@ import org.joda.money.Money;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mw.gov.health.lmis.util.MoneyDeserializer;
 import mw.gov.health.lmis.util.MoneySerializer;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class ApproveRequisitionLineItemDto {
   private UUID id;
 
