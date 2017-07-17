@@ -21,9 +21,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -43,5 +45,8 @@ public class RequisitionDto {
   private Boolean emergency;
   private UUID supplyingFacility;
   private UUID supervisoryNode;
+  private BasicRequisitionTemplateDto template;
+  private Set<OrderableDto> availableNonFullSupplyProducts;
   private Map<String, StatusLogEntry> statusChanges = new HashMap<>();
+  private List<StatusChangeDto> statusHistory = new ArrayList<>();
 }
