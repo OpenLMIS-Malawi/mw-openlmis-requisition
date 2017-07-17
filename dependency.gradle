@@ -21,6 +21,8 @@ dependencies {
     compile 'commons-codec:commons-codec:1.5'
     compile 'org.javers:javers-spring-boot-starter-sql:2.8.1'
     compile 'org.flywaydb:flyway-core:4.0.3'
+    compile 'commons-beanutils:commons-beanutils:1.9.3'
+
 
     testCompile "junit:junit"
     testCompile "org.mockito:mockito-core:1.+"
