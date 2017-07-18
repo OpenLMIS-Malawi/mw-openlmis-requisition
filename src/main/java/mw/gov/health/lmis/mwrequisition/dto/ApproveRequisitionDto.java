@@ -36,9 +36,9 @@ public class ApproveRequisitionDto extends BasicRequisitionDto {
    * Creates instance with data from original requisition.
    */
   public ApproveRequisitionDto(RequisitionDto requisition) {
-    super(requisition.getId(), requisition.getEmergency(),requisition.getStatus(),requisition
-        .getModifiedDate(),requisition.getStatusChanges(),requisition.getProcessingPeriod(),
-        requisition.getFacility(),requisition.getProgram());
+    super(requisition.getId(), requisition.getEmergency(), requisition.getStatus(), requisition
+            .getModifiedDate(), requisition.getStatusChanges(), requisition.getProcessingPeriod(),
+        requisition.getFacility(), requisition.getProgram());
     this.requisitionLineItems = requisition
         .getRequisitionLineItems()
         .stream()
@@ -50,9 +50,9 @@ public class ApproveRequisitionDto extends BasicRequisitionDto {
    * Creates instance with data from original basic requisition.
    */
   public ApproveRequisitionDto(BasicRequisitionDto requisition) {
-    super(requisition.getId(), requisition.getEmergency(),requisition.getStatus(),requisition
-            .getModifiedDate(),requisition.getStatusChanges(),requisition.getProcessingPeriod(),
-        requisition.getFacility(),requisition.getProgram());
+    super(requisition.getId(), requisition.getEmergency(), requisition.getStatus(), requisition
+            .getModifiedDate(), requisition.getStatusChanges(), requisition.getProcessingPeriod(),
+        requisition.getFacility(), requisition.getProgram());
     this.requisitionLineItems = Lists.newArrayList();
   }
 

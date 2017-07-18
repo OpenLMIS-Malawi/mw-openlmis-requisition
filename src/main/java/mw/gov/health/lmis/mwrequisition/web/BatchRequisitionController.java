@@ -1,10 +1,7 @@
 package mw.gov.health.lmis.mwrequisition.web;
 
-import static org.apache.commons.lang3.BooleanUtils.isFalse;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,21 +19,15 @@ import org.springframework.web.client.RestClientResponseException;
 import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.ApproveRequisitionLineItemDto;
 import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionDto;
-import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionTemplateColumnDto;
-import mw.gov.health.lmis.mwrequisition.dto.BasicRequisitionTemplateDto;
 import mw.gov.health.lmis.mwrequisition.dto.LocalizedMessageDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionErrorMessage;
-import mw.gov.health.lmis.mwrequisition.dto.RequisitionLineItemDto;
 import mw.gov.health.lmis.mwrequisition.dto.RequisitionsProcessingStatusDto;
-import mw.gov.health.lmis.mwrequisition.dto.SourceType;
 import mw.gov.health.lmis.mwrequisition.service.AuthService;
 import mw.gov.health.lmis.mwrequisition.service.RequisitionService;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -153,24 +144,8 @@ public class BatchRequisitionController extends BaseController {
           });
     }
 
-    BasicRequisitionTemplateDto template = requisition.getTemplate();
-    Map<String, BasicRequisitionTemplateColumnDto> columns = template.getColumnsMap();
-
-    for (RequisitionLineItemDto lineItem : requisition.getRequisitionLineItems()) {
-      for (BasicRequisitionTemplateColumnDto column : columns.values()) {
-        if (isFalse(column.getIsDisplayed()) || column.getSource() == SourceType.CALCULATED) {
-          String field = column.getName();
-
-          try {
-            PropertyUtils.setSimpleProperty(lineItem, field, null);
-          } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exp) {
-            throw new IllegalArgumentException(
-                "Could not set null value for property >" + field + "< in line item", exp
-            );
-          }
-        }
-      }
-    }
+    requisition.setModifiedDate(dto.getModifiedDate());
+    requisition.setNullForCalculatedFields();
 
     try {
       RequisitionDto response = requisitionService.update(requisition, token);

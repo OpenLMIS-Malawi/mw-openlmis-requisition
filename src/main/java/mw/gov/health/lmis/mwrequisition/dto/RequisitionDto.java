@@ -15,11 +15,16 @@
 
 package mw.gov.health.lmis.mwrequisition.dto;
 
+import static org.apache.commons.lang3.BooleanUtils.isFalse;
+
+import org.apache.commons.beanutils.PropertyUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,4 +54,26 @@ public class RequisitionDto {
   private Set<OrderableDto> availableNonFullSupplyProducts;
   private Map<String, StatusLogEntry> statusChanges = new HashMap<>();
   private List<StatusChangeDto> statusHistory = new ArrayList<>();
+
+  /**
+   * Sets null value in requisition line items for fields that are not displayed or have
+   * {@link SourceType#CALCULATED} type.
+   */
+  public void setNullForCalculatedFields() {
+    for (RequisitionLineItemDto lineItem : requisitionLineItems) {
+      for (BasicRequisitionTemplateColumnDto column : template.getColumnsMap().values()) {
+        if (isFalse(column.getIsDisplayed()) || column.getSource() == SourceType.CALCULATED) {
+          String field = column.getName();
+
+          try {
+            PropertyUtils.setSimpleProperty(lineItem, field, null);
+          } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exp) {
+            throw new IllegalArgumentException(
+                "Could not set null value for property >" + field + "< in line item", exp
+            );
+          }
+        }
+      }
+    }
+  }
 }
