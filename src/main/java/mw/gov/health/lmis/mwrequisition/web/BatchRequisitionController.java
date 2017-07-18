@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.BooleanUtils.isFalse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,10 +162,10 @@ public class BatchRequisitionController extends BaseController {
           String field = column.getName();
 
           try {
-            BeanUtils.setProperty(lineItem, field, null);
-          } catch (IllegalAccessException | InvocationTargetException exp) {
+            PropertyUtils.setSimpleProperty(lineItem, field, null);
+          } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exp) {
             throw new IllegalArgumentException(
-                "Missing property >" + field + "< in line item", exp
+                "Could not set null value for property >" + field + "< in line item", exp
             );
           }
         }
